@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: pre
+  name: pre
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pre
+  template:
+    metadata:
+      labels:
+        app: pre
+    spec:
+      containers:
+      - image: cadiaz/pre:v2
+        imagePullPolicy: Always
+        name: pre
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: pre
+  name: pre
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: pre
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pre-localhost
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: mc.corel.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: pre
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+---
+# kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8080:80

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: preweb
+  name: preweb
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: preweb
+  template:
+    metadata:
+      labels:
+        app: preweb
+    spec:
+      containers:
+      - image: cadiaz/preweb:v1
+        imagePullPolicy: Always
+        name: preweb
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: preweb
+  name: preweb
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: preweb
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: preweb-localhost
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: preweb.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: preweb
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+---
+# kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8080:80
